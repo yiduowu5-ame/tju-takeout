@@ -8,6 +8,7 @@ import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import com.sky.utils.JwtUtil;
 import com.sky.vo.EmployeeLoginVO;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,12 +22,13 @@ import java.util.Map;
 /**
  * 员工管理
  */
-@RestController
-@RequestMapping("/admin/employee")
-@Slf4j
+@RestController //标记这个类负责处理http请求，所有返回值会自动转化为json
+@RequestMapping("/admin/employee") //定义请求路径前缀，该类的所有映射都会以/admin/employee开头
+@Slf4j   //lombok,自动为类生成一个日志
+@Api(tags="员工相关接口")
 public class EmployeeController {
 
-    @Autowired
+    @Autowired //自动依赖注入,Spring 会找到一个类型为 EmployeeService 的 Bean，并赋值给这个字段。
     private EmployeeService employeeService;
     @Autowired
     private JwtProperties jwtProperties;
@@ -37,7 +39,7 @@ public class EmployeeController {
      * @param employeeLoginDTO
      * @return
      */
-    @PostMapping("/login")
+    @PostMapping("/login")//接受post /admin/employee/login
     public Result<EmployeeLoginVO> login(@RequestBody EmployeeLoginDTO employeeLoginDTO) {
         log.info("员工登录：{}", employeeLoginDTO);
 

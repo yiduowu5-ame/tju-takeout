@@ -1,16 +1,20 @@
 package com.sky.service.impl;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.PasswordConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
+import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
+import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +87,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setUpdateTime(LocalDateTime.now());
 
         //设置创建人
-        //TODO 改成当前登录用户的ID
         Long CreateUserid = BaseContext.getCurrentId();
         Long UpdateUserid = BaseContext.getCurrentId();
 
@@ -91,6 +94,74 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setUpdateUser(UpdateUserid);
 
         employeeMapper.insert(employee);
+        return;
+    }
+
+    /**
+     * 按页展示员工
+     * @param employeePageQueryDTO
+     * @return
+     */
+    public PageResult pageQuery(EmployeePageQueryDTO  employeePageQueryDTO) {
+        //select * from employee limit 10 offset 0
+        //告诉PageHelper我想进行分页
+        //PageHelper会进行自动分页（自动生成SQL中的LIMIT），并进行拦截查询结果，封装到一个Page<E>中
+        PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+        //pagehelper会利用threadlocal，存储当前线程的分页信息
+        //随后进行下次查询拦截
+        //当进行下句代码Mapper时，mybatis会调用底层的Executor.query方法，此时pagehelper线程会拦截此次查询，拦截原方法SQL，改成带 LIMIT 的分页 SQL；
+        //随后返回page<E>类型
+
+        Page<Employee>page  = employeeMapper.pageQuery(employeePageQueryDTO);
+
+        PageResult pageResult = new PageResult();
+        //构造需要返回的pageResult
+        pageResult.setRecords(page.getResult());
+        pageResult.setTotal(page.getTotal());
+        return pageResult;
+    }
+
+    /**
+     * 修改员工状态
+     * @param status
+     * @param id
+     */
+    @Override
+    public void changeStatus(Integer status,Long id) {
+        Employee employee = Employee.builder()
+                .status(status)
+                .id(id)
+                .updateTime(LocalDateTime.now())
+                .updateUser(BaseContext.getCurrentId())
+                .build();
+
+        employeeMapper.updateEmployee(employee);
+        return;
+    }
+
+    /**
+     * 按id查询员工
+     * @param id
+     * @return
+     */
+    public Employee QueryByID(Long id) {
+        Employee employee = employeeMapper.getByid(id);
+        employee.setPassword("****");
+        return employee;
+    }
+
+    /**
+     * 修改员工信息
+     * @param employeeDTO
+     */
+    public void updateEmployee(EmployeeDTO employeeDTO) {
+        Employee employee = new Employee();
+        BeanUtils.copyProperties(employeeDTO, employee);
+
+        employee.setUpdateUser(BaseContext.getCurrentId());
+        employee.setUpdateTime(LocalDateTime.now());
+
+        employeeMapper.updateEmployee(employee);
         return;
     }
 

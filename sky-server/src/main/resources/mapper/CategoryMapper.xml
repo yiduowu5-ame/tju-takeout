@@ -1,29 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.sky.mapper.CategoryMapper">
 
-    <select id="pageQuery" resultType="com.sky.entity.Category">
-        select * from category
-        <where>
-            <if test="name != null and name != ''">
-                and name like concat('%',#{name},'%')
-            </if>
-            <if test="type != null">
-                and type = #{type}
-            </if>
-        </where>
-        order by sort asc , create_time desc
-    </select>
-
-    <update id="update" parameterType="Category">
-        update category
+    <update id="updateCategory">
+        UPDATE category
         <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
             <if test="type != null">
                 type = #{type},
-            </if>
-            <if test="name != null">
-                name = #{name},
             </if>
             <if test="sort != null">
                 sort = #{sort},
@@ -31,22 +17,28 @@
             <if test="status != null">
                 status = #{status},
             </if>
-            <if test="updateTime != null">
-                update_time = #{updateTime},
-            </if>
-            <if test="updateUser != null">
-                update_user = #{updateUser}
-            </if>
+            update_time = #{updateTime},
+            update_user = #{updateUser}
         </set>
-        where id = #{id}
+        WHERE id = #{id}
     </update>
 
-    <select id="list" resultType="Category">
-        select * from category
-        where status = 1
-        <if test="type != null">
-            and type = #{type}
-        </if>
-        order by sort asc,create_time desc
+    <select id="pageQuery" resultType="com.sky.entity.Category">
+        SELECT * FROM category
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')</if>
+            <if test="type!= null"> and type = #{type}</if>
+        </where>
+        ORDER BY sort ASC, create_time DESC
     </select>
+    <select id="list" resultType="com.sky.entity.Category">
+        SELECT * FROM category
+        WHERE status = 1
+        <if test="type != null">
+            AND type = #{type}
+        </if>
+        ORDER BY sort, create_time DESC
+    </select>
+
 </mapper>

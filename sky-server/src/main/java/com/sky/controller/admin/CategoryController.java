@@ -6,6 +6,7 @@ import com.sky.entity.Category;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.CategoryService;
+import com.sky.service.DishService;
 import com.sky.service.EmployeeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -27,8 +28,7 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @Autowired
-    private EmployeeService employeeService;
+    private DishService dishService;
 
     /**
      * 新增分类

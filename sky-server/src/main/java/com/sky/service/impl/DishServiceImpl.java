@@ -4,6 +4,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
@@ -94,14 +95,19 @@ public class DishServiceImpl implements DishService {
         return dishVO;
     }
 
-//    /**
-//     * 按分类id查询菜品
-//     *
-//     * @param id
-//     */
-//    public void queryByCategory(Long id){
-//        dishMapper.queryByCategory(id);
-//    }
+    /**
+     * 按分类id查询菜品
+     *
+     * @param categoryId
+     * @return
+     */
+    public List<Dish> queryByCategory(Long categoryId){
+        Dish dish = new Dish();
+        dish.setCategoryId(categoryId);
+        dish.setStatus(StatusConstant.ENABLE);
+
+        return dishMapper.queryByCategory(dish);
+    }
 
     /**
      * 菜品的起售和停售

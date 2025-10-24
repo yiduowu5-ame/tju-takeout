@@ -16,3 +16,6 @@ sky:
     port: 6379
     host: localhost
     database: 0
+  wechat:
+    appid: ${WECHAT_APPID}
+    secret: ${WECHAT_SECRET}

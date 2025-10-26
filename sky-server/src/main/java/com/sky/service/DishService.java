@@ -65,4 +65,10 @@ public interface DishService {
      */
     List<DishVO> listWithFlavor(Dish dish);
 
+    /**
+     * 通过id批量查询菜品
+     * @param ids
+     * @return
+     */
+    List<Dish> batchQueryById(List<Long> ids);
 }

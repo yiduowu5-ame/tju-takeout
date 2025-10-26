@@ -11,9 +11,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 菜品管理
@@ -27,6 +30,9 @@ public class DishController {
     @Autowired
     private DishService dishService;
 
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
+
     /**
      * 新建菜品
      * @param dishDTO
@@ -37,6 +43,9 @@ public class DishController {
     public Result<Void> create(@RequestBody DishDTO dishDTO){
         log.info("新建菜品，名字为：{}", dishDTO.getName());
         dishService.create(dishDTO);
+
+        //清理缓存
+        cacheClean(dishDTO.getCategoryId());
         return Result.success();
     }
 
@@ -89,6 +98,11 @@ public class DishController {
     public Result<Void>changeStatus(@PathVariable Integer status,Long id){
         log.info("菜品的起售和停售，修改前状态为：{}",status);
         dishService.changeStatus(status,id);
+
+        //清理缓存
+        //得到菜品对应分类
+        DishVO dishVO = dishService.queryById(id);
+        cacheClean(dishVO.getCategoryId());
         return Result.success();
     }
 
@@ -101,7 +115,14 @@ public class DishController {
     @ApiOperation("删除菜品")
     public Result<Void>delete(@RequestParam List<Long> ids){
         log.info("删除菜品，目标为：{}",ids);
+        //清理缓存
+        //找出删除菜品id对应的分类id
+        List<Dish>list = dishService.batchQueryById(ids);
+        Set<Long> categoryIds = list.stream().map(Dish::getCategoryId).collect(Collectors.toSet());
+
         dishService.delete(ids);
+
+        categoryIds.forEach(this::cacheClean);
         return Result.success();
     }
 
@@ -114,7 +135,25 @@ public class DishController {
     @ApiOperation("修改菜品")
     public Result<Void>update(@RequestBody DishDTO dishDTO){
         log.info("修改菜品，参数为:{}",dishDTO);
+
+        DishVO oldDish =  dishService.queryById(dishDTO.getId());
+        Long oldCategoryId = oldDish.getCategoryId();
+        Long newCategoryId = dishDTO.getCategoryId();
+
+        //清理旧缓存
+        cacheClean(oldCategoryId);
+
+        //修改菜品
         dishService.update(dishDTO);
+
+        //删除修改后的缓存
+        cacheClean(newCategoryId);
+
         return Result.success();
+    }
+
+    private void cacheClean(Long categoryId){
+        String key = "dish_"+categoryId;
+        redisTemplate.delete(key);
     }
 }

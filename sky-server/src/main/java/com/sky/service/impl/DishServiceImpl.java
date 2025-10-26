@@ -201,4 +201,13 @@ public class DishServiceImpl implements DishService {
 
         return dishVOList;
     }
+
+    /**
+     * 通过id批量查询菜品
+     * @param ids
+     * @return
+     */
+    public List<Dish> batchQueryById(List<Long> ids){
+        return dishMapper.batchSelectByIds(ids);
+    }
 }

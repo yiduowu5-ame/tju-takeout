@@ -1,11 +1,13 @@
 package com.sky.mapper;
 
 import com.github.pagehelper.Page;
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import org.apache.ibatis.annotations.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Mapper
 public interface OrderMapper {
@@ -61,4 +63,50 @@ public interface OrderMapper {
      */
     @Select("select count(orders.id) from orders where status = #{status}")
     Integer countStatus(Integer status);
+
+    /**
+     * 通过订单时间来得到订单
+     * @param status
+     * @param orderTime
+     * @return
+     */
+    @Select("select * from orders where status = #{status} and order_time < #{orderTime}")
+    List<Orders> getByTime(Integer status,LocalDateTime orderTime);
+
+    /**
+     * 统计订单销售总数
+     * @param beginTime
+     * @param endTime
+     * @param status
+     * @return
+     */
+    @Select("select sum(orders.amount) from orders where order_time>#{beginTime} and order_time<= #{endTime} and status = #{status}")
+    Double countStatistics(LocalDateTime beginTime, LocalDateTime endTime, Integer status);
+
+    /**
+     * 统计总订单数
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+    @Select("select count(*) from orders where order_time>#{beginTime} and order_time <= #{endTime}")
+    Integer orderCountStatistics(LocalDateTime beginTime, LocalDateTime endTime);
+
+    /**
+     * 统计有效订单数
+     * @param beginTime
+     * @param endTime
+     * @param status
+     * @return
+     */
+    @Select("select count(*) from orders where order_time>#{beginTime} and order_time <= #{endTime} and status = #{status}")
+    Integer validOrderCountStatistics(LocalDateTime beginTime, LocalDateTime endTime, Integer status);
+
+    /**
+     * 统计指定时间内的top10订单
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+    List<GoodsSalesDTO>top10(LocalDateTime beginTime,LocalDateTime endTime,Integer status);
 }

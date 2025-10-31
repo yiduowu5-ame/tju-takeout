@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -19,6 +20,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.BeanUtils;
@@ -30,9 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,6 +54,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     @Autowired
     private WeChatPayUtil weChatPayUtil;
@@ -163,7 +166,18 @@ public class OrderServiceImpl implements OrderService {
         //获取订单号码
         String orderNumber = ordersPaymentDTO.getOrderNumber();
 
+
         orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, orderNumber);
+
+        Orders ordersDB = orderMapper.getByNumber(orderNumber);
+        //通过websocket向客户端浏览器发推送消息 type orderId content
+        Map map = new HashMap();
+        map.put("type",1);//提示类型： 1 来单提醒 2客户催单
+        map.put("orderId",ordersDB.getId());//订单号
+        map.put("content","订单号:"+orderNumber);
+
+        String jsonString = JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(jsonString);
 
         return vo;
     }
@@ -187,6 +201,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+
     }
 
     /**
@@ -253,7 +268,15 @@ public class OrderServiceImpl implements OrderService {
      * @param id
      */
     public void reminder(Long id){
+        Orders order = orderMapper.getById(id);
 
+        Map map = new HashMap();
+        map.put("type",2);//提示类型： 1 来单提醒 2客户催单
+        map.put("orderId",order.getId());//订单号
+        map.put("content","订单号:"+order.getNumber());
+
+        String jsonString = JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(jsonString);
     }
 
     /**
